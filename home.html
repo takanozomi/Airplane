@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Airport API Client</title>
+</head>
+
+<body>
+  <!-- Airport Data 버튼 -->
+  <button id="getAirportData">Airport Data 가져오기</button>
+  <button id="Realtime">Realtime Airport Data </button>
+  <button id="Schedule">Schedule Airport Data</button>
+  <pre id="airportResponse"></pre>
+  <script>
+    document.getElementById('Schedule').addEventListener('click', ()=>{
+      window.location.href = '/schedule';
+    });
+    document.getElementById('Realtime').addEventListener('click', () => {
+      // /realtime 경로로 이동
+      window.location.href = '/realtime';
+    });
+    const apiKey = 'fU20vGzkaNwrPtq9F4kp+hKU6yfSG+/irmXLEsA9+FiHacXfVRiMQ/+l8+R7osxF3msb0J4rIPQGq1sx/Sf7Vg==';
+
+    // Airport Data 버튼 클릭 시
+    document.getElementById('getAirportData').addEventListener('click', async () => {
+      try {
+        // API 엔드포인트 및 인증키 설정
+        const endpoint = 'http://localhost:8080/getAirportData';
+
+        // API 요청 설정
+        const response = await fetch(endpoint, {
+          headers: {
+            'Authorization': `Basic ${apiKey}`,
+            'Accept': 'application/json', // JSON 형식의 응답을 요청
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API 호출 중 오류 발생: ${response.status}`);
+        }
+
+        // API 응답 데이터를 JSON 형식으로 파싱하고 테이블로 변환하여 표시
+        const jsonData = await response.json();
+        createTable(jsonData, 'airportResponse');
+      } catch (error) {
+        console.error('API 호출 중 오류 발생:', error);
+        document.getElementById('airportResponse').textContent = `API 호출 중 오류 발생: ${error.message}`;
+      }
+    });
+
+    // JSON 데이터를 파싱하고 HTML 테이블을 생성하는 함수
+    function createTable(data, targetElementId) {
+      // JSON 데이터 파싱
+      const items = data.response.body[0].items[0].item;
+
+      // 테이블 요소 생성
+      const table = document.createElement('table');
+      table.setAttribute('border', '1');
+
+      // 테이블 헤더 생성
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+
+      for (const key in items[0]) {
+        if (items[0].hasOwnProperty(key)) {
+          const th = document.createElement('th');
+          th.textContent = key;
+          headerRow.appendChild(th);
+        }
+      }
+
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      // 테이블 바디 생성
+      const tbody = document.createElement('tbody');
+
+      items.forEach(item => {
+        const row = document.createElement('tr');
+
+        for (const key in item) {
+          if (item.hasOwnProperty(key)) {
+            const cell = document.createElement('td');
+            cell.textContent = item[key][0];
+            row.appendChild(cell);
+          }
+        }
+
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+
+      // 생성된 테이블을 원하는 위치에 추가
+      const targetElement = document.getElementById(targetElementId);
+      targetElement.innerHTML = '';
+      targetElement.appendChild(table);
+    }
+  </script>
+</body>
+
+</html>

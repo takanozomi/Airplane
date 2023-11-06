@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>International Flight Schedule Search</h1>
+    <div id="searchResult"></div>
+    <form action="/getAirportSchedule" method="get">
+      <label for="schDate">Search Date (YYYYMMDD):</label>
+      <input type="text" id="schDate" name="schDate" placeholder="(YYYYMMDD)"><br><br>
+
+      <label for="schDeptCityCode">Departure City Code:</label>
+      <input type="text" id="schDeptCityCode" name="schDeptCityCode" placeholder="city code"><br><br>
+
+      <label for="schArrvCityCode">Arrival City Code:</label>
+      <input type="text" id="schArrvCityCode" name="schArrvCityCode" placeholder="city code"><br><br>
+
+      <input type="submit" value="Search">
+  </form>
+  <button id="home">home</button>
+<script>
+  document.getElementById('home').addEventListener('click', ()=>{
+    window.location.href = '/';
+  });
+  // ... 이전 코드 ...
+
+  // 새로운 함수 추가
+  function createTable(data, targetElementId) {
+    // JSON 데이터 파싱
+    const items = data.response.body[0].items[0].item;
+
+    // 테이블 요소 생성
+    const table = document.createElement('table');
+    table.setAttribute('border', '1');
+
+    // 테이블 헤더 생성
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    for (const key in items[0]) {
+      if (items[0].hasOwnProperty(key)) {
+        const th = document.createElement('th');
+        th.textContent = key;
+        headerRow.appendChild(th);
+      }
+    }
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // 테이블 바디 생성
+    const tbody = document.createElement('tbody');
+
+    items.forEach(item => {
+      const row = document.createElement('tr');
+
+      for (const key in item) {
+        if (item.hasOwnProperty(key)) {
+          const cell = document.createElement('td');
+          cell.textContent = item[key][0];
+          row.appendChild(cell);
+        }
+      }
+
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+
+    // 생성된 테이블을 원하는 위치에 추가
+    const targetElement = document.getElementById(targetElementId);
+    targetElement.innerHTML = '';
+    targetElement.appendChild(table);
+  }
+
+  document.querySelector('form').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent the form from submitting the traditional way
+
+    const searchDate = document.getElementById('schDate').value;
+    const deptCityCode = document.getElementById('schDeptCityCode').value;
+    const arrvCityCode = document.getElementById('schArrvCityCode').value;
+
+    try {
+      const endpoint = `http://localhost:8080/getAirportSchedule?schDate=${searchDate}&schDeptCityCode=${deptCityCode}&schArrvCityCode=${arrvCityCode}`;
+      const response = await fetch(endpoint);
+
+      if (!response.ok) {
+        throw new Error(`API 호출 중 오류 발생: ${response.status}`);
+      }
+
+      const jsonData = await response.json();
+      // Handle the response and display it on the page using createTable
+      createTable(jsonData, 'searchResult'); // Pass the JSON data and target element ID
+    } catch (error) {
+      console.error('API 호출 중 오류 발생:', error);
+      alert(`API 호출 중 오류 발생: ${error.message}`);
+    }
+  });
+</script>
+
+      
+      
+
+    
+</body>
+</html>
